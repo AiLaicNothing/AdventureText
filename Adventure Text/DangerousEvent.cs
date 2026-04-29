@@ -31,6 +31,7 @@ namespace Adventure_Text
             {
                 Console.WriteLine("[Emboscaste al troll]");
                 Console.WriteLine("[Lograste inflingirle 8 de daño]");
+                manager.enemies = new List<Entity>();
                 manager.enemies.Add(enemy);
                 enemy.ReciveDamage(8);
 
@@ -40,7 +41,10 @@ namespace Adventure_Text
             {
                 Console.WriteLine("[Intentaste pasar desapercibido]");
                 Console.WriteLine("[El troll te noto y recbiste 5 de daño]");
+
+                manager.enemies = new List<Entity>();
                 manager.enemies.Add(enemy);
+
                 manager.player.ReciveDamage(5);
 
                 manager.StartCombat();

@@ -15,9 +15,19 @@ namespace Adventure_Text
 
         public List<Entity> enemies;
 
+        public List<Event> events;
+        private int eventsCompleted = 0;
+        private int maxEvents = 10;
+        private Random rand = new Random();
+
         public void StartGame()
         {
+            itemInventory = new List<Item>();
+            InitializeEvents();
 
+            CreateCharacter();
+
+            GameLoop();
         }
 
         public void CreateCharacter()
@@ -27,6 +37,35 @@ namespace Adventure_Text
 
             player = new Player(playerName);
             Console.WriteLine($"Tu personaje se llama {player.Name} tiene {player.Health} de vida");
+        }
+
+        public void InitializeEvents()
+        {
+            events = new List<Event>()
+    {
+        new EncounterEvent(),
+        new DangerousEvent(),
+        new ThreePathEventcs(),
+        new LuckyEvent()
+    };
+        }
+
+        private void GameLoop()
+        {
+            while (player.Health > 0 && eventsCompleted < maxEvents)
+            {
+                Console.Clear();
+
+                Event e = events[rand.Next(events.Count)];
+
+                e.Execute(this);
+
+                eventsCompleted++;
+
+                Wait();
+            }
+
+            EndGame();
         }
 
         public void StartCombat()
@@ -89,49 +128,77 @@ namespace Adventure_Text
 
             string option = Console.ReadLine();
 
-            if( option == "1")
+            if (option == "1")
             {
-                if (option == "1")
+                //Enseña las opciones de enemigo
+                for (int i = 0; i < enemies.Count; i++)
                 {
-                    //Enseña las opciones de enemigo
-                    for (int i = 0; i < enemies.Count; i++)
-                    {
-                        Console.WriteLine($"[{i}] {enemies[i].Name} - {enemies[i].Health}");
-                    }
-
-                    //Atacar enemigo seleccionado
-
-                    string enemySelected = Console.ReadLine();
-                    int index = int.Parse(enemySelected);
-
-                    Entity enemy = enemies[index];
-
-                    enemy.ReciveDamage(player.Damage);
-
-                    Console.WriteLine($"{player.Name} atacó a {enemy.Name} por {player.Damage} de daño");
-
-                    if (enemy.Health <= 0)
-                    {
-                        Console.WriteLine($"{enemy.Name} murió");
-                        DropItem();
-                        enemies.RemoveAt(index);
-                    }
+                    Console.WriteLine($"[{i}] {enemies[i].Name} - {enemies[i].Health}");
                 }
-                else if( option == "2")
+
+                //Atacar enemigo seleccionado
+
+                string enemySelected = Console.ReadLine();
+                int index = int.Parse(enemySelected);
+
+                Entity enemy = enemies[index];
+
+                enemy.ReciveDamage(player.Damage);
+
+                Console.WriteLine($"{player.Name} atacó a {enemy.Name} por {player.Damage} de daño");
+
+                if (enemy.Health <= 0)
                 {
-                    //Show items 
-                    //make a foreach item in itemInventory show with a [X] number of option
-                    //tell the player to write respective number to use item;
-
-                    //Give a options to choose to who use first option player, rest enemies
+                    Console.WriteLine($"{enemy.Name} murió");
+                    DropItem();
+                    enemies.RemoveAt(index);
                 }
- 
             }
+            else if (option == "2")
+            {
+                if (itemInventory.Count == 0)
+                {
+                    Console.WriteLine("No tienes items");
+                    return;
+                }
+
+                Console.WriteLine("Inventario:");
+
+                for (int i = 0; i < itemInventory.Count; i++)
+                {
+                    Console.WriteLine($"[{i}] {itemInventory[i].Name}");
+                }
+
+                int itemIndex = int.Parse(Console.ReadLine());
+                Item selectedItem = itemInventory[itemIndex];
+
+                Console.WriteLine("¿A quién usar?");
+                Console.WriteLine("[0] Tú");
+
+                for (int i = 0; i < enemies.Count; i++)
+                {
+                    Console.WriteLine($"[{i + 1}] {enemies[i].Name}");
+                }
+
+                int targetIndex = int.Parse(Console.ReadLine());
+
+                Entity target;
+
+                if (targetIndex == 0)
+                    target = player;
+                else
+                    target = enemies[targetIndex - 1];
+
+                selectedItem.Use(target);
+
+                itemInventory.RemoveAt(itemIndex);
+            }
+
+        }
         }
 
         public void EnemyTurn()
         {
-            Random rand = new Random();
             int index = rand.Next(enemies.Count);
 
             Entity enemy = enemies[index];
@@ -151,6 +218,25 @@ namespace Adventure_Text
         {
             Console.WriteLine("Presiona ENTER para continuar...");
             Console.ReadLine();
+        }
+
+        private void EndGame()
+        {
+            Console.Clear();
+            Console.WriteLine("=== FINAL ===");
+
+            if (player.Health <= 0)
+            {
+                Console.WriteLine("Final Malo: Has muerto en la aventura.");
+            }
+            else if (player.Health < 10)
+            {
+                Console.WriteLine("Final Neutral: Sobreviviste... apenas.");
+            }
+            else
+            {
+                Console.WriteLine("Final Bueno: Saliste victorioso y fuerte.");
+            }
         }
     }
 
